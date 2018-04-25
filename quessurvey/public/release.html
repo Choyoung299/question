@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="/js/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/js-cookie/latest/js.cookie.min.js"></script>
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+
+        <div id="header">
+            <div class="logo">
+                <img src="/img/logoTop.png" alt="">
+                <span>随机问卷</span>
+            </div>
+
+            <div>{{page.title}}</div>
+
+            <el-card style="margin:5px" v-for="(item,index) in page.content" :key="'page_'+index" :header="item.text">
+                <el-radio-group v-model="page.content[index].answer">
+                    <el-radio v-for="(i,index) in page.item" :key="'item_'+index" :label="i.id">{{i.text}}</el-radio>
+                </el-radio-group>
+            </el-card>
+
+            <el-card style="margin-bottom:5px" header="其他建议">
+                <el-input type="textarea" :rows="2" placeholder="其他建议" v-model="page.note">
+
+                </el-input>
+            </el-card>
+
+        </div>
+        <el-button type="primary" @click="save">提交</el-button>
+    </div>
+    <script>
+        var rvm = new Vue({
+            el: '#container',
+            methods: {
+                save: function () {
+                    var _this = this
+                    $.post('/papers/release/add', {
+                        title: '',
+                        paper_id: _this.paperId,
+                        content: JSON.stringify(_this.page.content),
+                        item: JSON.stringify(_this.page.item),
+                        note: _this.page.note,
+                        title:_this.page.title,
+                        cuid:Cookies.getJSON('releaseInfo'+_this.paperId).cuid
+                    }, function (result) {
+                        location.reload()
+                    })
+                }
+            },
+            created: function () {
+                var _this = this,
+                    id = this.paperId
+                $.get('/papers/find', { id: id }, function (result) {
+                    if (result.error != 0) { return }
+                    _this.page.title = result.data.title
+                    _this.page.content = JSON.parse(result.data.content)
+                })
+            },
+            data: {
+                paperId: Cookies.getJSON('release_paper_id'),
+                page: {
+                    title: '',
+                    content: [],
+                    note: '',
+                    item: [
+                        { id: 1, text: '优秀', val: 5 },
+                        { id: 2, text: '良好', val: 4 },
+                        { id: 3, text: '中等', val: 3 },
+                        { id: 4, text: '很差', val: 2 }
+                    ]
+                },
+            },
+        })
+    </script>
+</body>
+
+</html>

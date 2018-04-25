@@ -1,0 +1,59 @@
+<div id="paper">
+    <div class="paper-container">
+        <el-button onclick="indexVm.loadPage('/nav/papers_add.html')" type="primary" size="mini">创建问卷</el-button>
+    </div>
+    <el-table :data="paperList" style="width: 100%">
+        <el-table-column prop="title" label="标题" width="180">
+        </el-table-column>
+        <el-table-column prop="creator_id" label="创建人" width="180">
+        </el-table-column>
+        <el-table-column prop="ctime" label="创建时间" width="220">
+        </el-table-column>
+        <el-table-column label="操作">
+            <template slot-scope="scope">
+                <el-button type="text" @click="loadPage(scope.row.id)">编辑</el-button>
+                <el-button type="text" @click="answer(scope.row.id)">详情</el-button> 
+                <a  target="_blank" :href="'/papers/release?id='+scope.row.id">发布</a> 
+            </template>
+        </el-table-column>
+    </el-table>
+</div>
+
+<script>
+    new Vue({
+        el: '#paper',
+        created: function () {
+            var _this = this
+            $.get('/papers/list', function (result) {
+                if (result.error != 0) { return }
+                _this.paperList = result.data
+            })
+        },
+        methods: {
+            loadPage:function(id){
+                indexVm.loadPage('/nav/papers_edit.html?paper_id='+id)
+            },
+            answer:function(id){
+                indexVm.loadPage('/nav/papers_answer.html?paper_id='+id)
+            }
+        },
+        data: function () {
+            return {
+                paperList: [],
+            }
+        }
+    })
+</script>
+
+<style>
+    
+    #paper{
+        position: relative;
+    }
+    .paper-container {
+        padding: 10px;
+        position: absolute;
+        right: 10px;
+        z-index: 1;
+    }
+</style>

@@ -1,0 +1,139 @@
+<div id="outline">
+    <el-tree default-expand-all :data="data" :props="defaultProps" draggable @node-drop="drop">
+        <span @mouseover="data.flag=true" @mouseout="data.flag=false" slot-scope="{ node, data }">
+            {{data.text}}
+            <span v-show="data.flag">
+                <el-button type="text" @click="editOutline(data)">
+                    <i class="el-icon-edit"></i>编辑</el-button>
+                <el-button type="text" @click.stop="addOutline(data)">
+                    <i class="el-icon-plus"></i>添加子节点</el-button>
+                <el-button v-show="data.children.length==0" type="text" @click.stop="delOutline(node,data)">
+                    <i class="el-icon-remove-outline"></i>删除</el-button>
+            </span>
+        </span>
+    </el-tree>
+</div>
+
+<script>
+    new Vue({
+        el: '#outline',
+        data: function () {
+            return {
+                data: [],
+                defaultProps: {
+                    children: 'children',
+                    label: 'text'
+                }
+            }
+        },
+        created: function () {
+            var _this = this
+            $.get('/outline', function (result) {
+                if (result.error != 0) { return }
+                _this.data = result.data
+            })
+        },
+        methods: {
+            editOutline: function (data) {
+                var _this = this
+                this.$prompt('请输入内容', '编辑节点', {
+                    inputPattern: /^.+$/,
+                    inputErrorMessage: '内容不能为空',
+                    inputValue: data.text,
+                    callback: function (action, obj) {
+                        if (action != 'confirm') { return }
+                        $.post('/outline/edit', {
+                            id: data.id,
+                            text: obj.inputValue
+                        }, function (reesult) {
+                            if (result.error != 0) { return }
+                            _this.$set(data, 'text', obj.inputValue)
+                        })
+                    }
+                })
+            },
+            delOutline: function (node, data) {//删除
+                this.$confirm('删除后不能恢复', '删除', {
+                    callback: function (action) {
+                        if (action == 'confirm') {
+                            $.get('/outline/del', { id: data.id }, function (result) {
+                                if (result.error != 0) { return }
+                                var parent = node.parent;
+                                children = parent.data.children || parent.data;
+                                var index = children.findIndex(function (value) {
+                                    return value.id == data.id
+                                })
+                                children.splice(index, 1)
+                            })
+                        }
+                    }
+                })
+            },
+            addOutline: function (data) {//添加
+                var _this = this
+                this.$prompt('请输入内容', '添加子节点', {
+                    inputPattern: /^.+$/,
+                    inputErrorMessage: '内容不能为空',
+                    callback: function (action, obj) {
+                        if (action != 'confirm') { return }
+                        $.post('/outline/add', {
+                            text: obj.inputValue,
+                            pid: data.id,
+                        }, function (result) {
+                            if (result.error !== 0) { return }
+                            data.children.push({
+                                text: obj.inputValue,
+                                children: [],
+                                id: result.id,
+                                pid: data.id,
+                                flag: false,
+                            })
+                        })
+                    }
+                })
+            },
+            drop: function (node1, node2, pos) {
+                var id = node1.data.id
+                if (pos == 'before') {
+                    if (node2.previousSibling.previousSibling) {
+                        var prenode = node2.previousSibling.previousSibling
+                        presort = prenode.data.sort
+                    } else {
+                        presort = node2.data.sort - 0.1
+                    }
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.pid,
+                        sort: (presort + node2.data.sort) / 2
+                    }, function (result) {
+                        if (result.error != 0) { return }
+                    })
+                } else if (pos == 'after') {
+                    if (node2.nextSibling.nextSibling) {
+                        var nextnode = node2.nextSibling.nextSibling
+                        nextnode = nextnode.data.sort
+                    } else {
+                        nextnode = node2.data.sort + 0.1
+                    }
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.pid,
+                        sort: (nextnode + node2.data.sort) / 2
+                    }, function (result) {
+                        if (result.error != 0) { return }
+                    })
+                }else{
+                    $.post('/outline/sort', {
+                        id: id,
+                        pid: node2.data.id,
+                        sort: 0
+                    }, function (result) {
+                        if (result.error != 0) { return }
+                    })
+                }
+            },
+        }
+
+    })
+
+</script>

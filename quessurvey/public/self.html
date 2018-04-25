@@ -1,0 +1,130 @@
+<div id="self">
+    <template>
+        <el-table :data="tableData5" style="width: 100%">
+            <el-table-column label="个人中心" prop="id">
+                <template slot-scope="props">
+                    <el-form label-position="left" inline class="demo-table-expand">
+                        <el-form-item label="用户名">
+                            <span>{{ props.row.username }}</span>
+                        </el-form-item>
+
+                        <el-form-item label="ID">
+                            <span>{{ props.row.id }}</span>
+                        </el-form-item>
+                        <el-form-item label="手机号">
+                            <span>{{ props.row.phone }}</span>
+                            <el-button type="text" @click="editPhone">修改</el-button>
+                        </el-form-item>
+
+                        <el-form-item label="邮箱">
+                            <span>{{ props.row.email }}</span>
+                            <el-button type="text" @click="editEmail">修改</el-button>
+                        </el-form-item>
+                        <el-form-item label="创建时间">
+                            <span>{{ props.row.ctime }}</span>
+                        </el-form-item>
+                        <el-form-item label="头像">
+                            <img :src="props.row.photo" alt="">
+                        </el-form-item>
+                    </el-form>
+                </template>
+            </el-table-column>
+        </el-table>
+    </template>
+</div>
+<script>
+    new Vue({
+        el: '#self',
+        data() {
+            return {
+                tableData5: []
+            }
+        },
+        created() {
+            var _this = this
+            $.get('/user/getuser', function (result) {
+                if (result.error == 0) {
+                    _this.tableData5 = result.data
+                }
+            })
+        },
+        methods: {
+            editEmail() {
+                var _this = this
+                this.$prompt('请输入邮箱', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    inputPattern: /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
+                    inputErrorMessage: '邮箱格式不正确'
+                }).then(({ value }) => {
+                    $.get('/edit/email', { val: value }, result => {
+                        if (result.error == 0) {
+                            this.$message({
+                                type: 'success',
+                                message: '邮箱修改为: ' + value
+                            });
+                            $.get('/user/getuser', function (result) {
+                                if (result.error == 0) {
+                                    _this.tableData5 = result.data
+                                }
+                            })
+                        }
+                    })
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '取消输入'
+                    });
+                });
+            },
+            editPhone() {
+                var _this = this
+                this.$prompt('请输入手机号', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    inputPattern: /^1[3|4|5|8][0-9]\d{4,8}$/,
+                    inputErrorMessage: '手机号不合法'
+                }).then(({ value }) => {
+                    $.get('/edit/phone', { val: value }, result => {
+                        if (result.error == 0) {
+                            this.$message({
+                                type: 'success',
+                                message: '手机号修改为: ' + value
+                            });
+                            $.get('/user/getuser', function (result) {
+                                if (result.error == 0) {
+                                    _this.tableData5 = result.data
+                                }
+                            })
+                        }
+                    })
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '取消输入'
+                    });
+                });
+            },
+            
+        }
+
+    })
+</script>
+<style>
+    .demo-table-expand {
+        font-size: 0;
+    }
+
+    .demo-table-expand label {
+        width: 90px;
+        color: #99a9bf;
+    }
+
+    .demo-table-expand .el-form-item {
+        margin-right: 0;
+        margin-bottom: 0;
+        width: 50%;
+    }
+</style>

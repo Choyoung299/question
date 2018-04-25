@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        * {
+            padding: 0px;
+            margin: 0px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        body {
+            background: url(/img/banner5.jpg) no-repeat;
+            background-size: 100%;
+        }
+        #container {
+            width: 400px;
+            position: absolute;
+            left: 50%;
+            margin-left: -200px;
+            top: 10%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .h1 {
+            width: 200px;
+            height: 50px;
+            text-align: left;
+            line-height: 50px;
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding: 14px 0;
+            color: floralwhite;
+            letter-spacing: 1px;
+        }
+        .h1 img{
+            margin-right: 10px;
+        }
+        .el-form-item__label {
+            color: beige;
+            text-indent: 10px;
+        }
+        .el-radio__label{
+            color: beige;
+        }
+        .el-form-item {
+            margin-bottom: 20px;
+        }
+        .el-form-item.el-form-item--feedback:nth-last-child(1) .el-form-item__content{
+            margin-left: 0 !important;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .regbtn{
+            width: 95%;
+            margin-left: 0;
+        }
+        .regbtna{
+            display: block;
+            width: 95%;
+            text-decoration: none;
+            text-align: right;
+            color: beige;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div class="h1">
+            <img src="/img/logo.png" alt="">天问问券注册
+        </div>
+
+        <el-form id="regform" :status-icon="true" :rules="rules" label-position="left" action="/users/add" method="post" ref="form" :model="form"
+            label-width="80px">
+            <el-form-item label="用户名" prop="username">
+                <el-input v-model="form.username" name="username"></el-input>
+            </el-form-item>
+
+            <el-form-item label="密码" prop="password">
+                <el-input type="password" v-model="form.password" name="password"></el-input>
+            </el-form-item>
+
+            <el-form-item label="确认密码" prop="password2">
+                <el-input type="password" v-model="form.password2"></el-input>
+            </el-form-item>
+
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="form.email" name="email"></el-input>
+            </el-form-item>
+            <el-form-item label="手机" prop="phone">
+                <el-input v-model="form.phone" name="phone"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-radio-group v-model="form.sex">
+                    <el-radio name="sex" label="1">男</el-radio>
+                    <el-radio name="sex" label="2">女</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item >
+                <el-button id="regbtncon" @click="regist()" type="primary" class="regbtn">立即注册</el-button>
+                <a href="/login" class="regbtna">已有账号？立即登录</a>
+            </el-form-item>
+        </el-form>
+    </div>
+    <script>
+        var regVm = new Vue({
+            el: '#container',
+            data: function () {
+                var _this = this
+                var chkExist = function (option, callback) {
+                    // option的意义：
+                    // option = {
+                    //     filed:'username',
+                    //     value:'value'
+                    //     table:''
+                    // }
+                    $.get('/chkExist', {
+                        filed: option.filed,
+                        value: option.value,
+                        table: option.table
+                    }, function (result) {
+                        if (result.error == 0) {
+                            callback()
+                        } else {
+                            callback('已存在')
+                        }
+                    })
+                }
+                var chkPwd = function (value, callback) {
+                    if (value.trim() == '') {
+                        callback(new Error('请重复输入密码'))
+                    } else if (value == _this.form.password) {
+                        callback()
+                    } else {
+                        callback(new Error('两次密码输入不一致'))
+                    }
+                }
+                return {
+                    form: {
+                        username: '',
+                        password: '',
+                        password2: '',
+                        email: '',
+                        phone: '',
+                        sex: '1'
+                    },
+                    rules: {
+                        username: [
+                            {
+                                validator: function (rule, value, callback) {
+                                    var usernamereg = /^[a-z]\w{2,17}$/
+                                    if (value.trim() == '') {
+                                        callback(new Error('请输入用户名'))
+                                    } else if (!usernamereg.test(value)) {
+                                        callback(new Error('请输入2-18个字符，以小写字母开始'))
+                                    } else {
+                                        chkExist({
+                                            filed: 'username',
+                                            value: value,
+                                            table: 'ques'
+                                        }, callback)
+                                    }
+                                },
+                                trigger: 'blur'
+                            },
+                        ],
+                        password: [
+                            {
+                                validator: function (rules, value, callback) {
+                                    var len = value.length
+                                    if (value.trim() == '') {
+                                        callback(new Error('请输入密码'))
+                                    } else if (len < 6 || len > 18) {
+                                        callback(new Error('密码长度为6到18个字符'))
+                                    } else {
+                                        _this.$refs.form.validateField('password2')
+                                        callback()
+                                    }
+                                }
+                            }
+                        ],
+                        password2: [
+                            {
+                                validator: function (rule, value, callback) {
+                                chkPwd(value, callback)
+                            }
+                            }
+                        ],
+                        email: [
+                            {
+                                validator: function (rule, value, callback) {
+                                    if (value.trim() == '') {
+                                        callback(new Error('请输入邮箱'))
+                                    } else if (!/^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$/.test(value)) {
+                                        callback(new Error('邮箱不合法'))
+                                    } else {
+                                        chkExist({
+                                            filed: 'email',
+                                            value: value,
+                                            table: 'ques'
+                                        }, callback)
+                                    }
+                                },
+                                trigger: 'blur'
+                            }
+                        ],
+                        phone: [
+                            {
+                                validator: function (rule, value, callback) {
+                                    if (value.trim() == '') {
+                                        callback(new Error('请输入手机号'))
+                                    } else if (!/^1[3|4|5|8][0-9]\d{4,8}$/.test(value)) {
+                                        callback(new Error('手机号不合法'))
+                                    } else {
+                                        chkExist({
+                                            filed: 'phone',
+                                            value: value,
+                                            table: 'ques'
+                                        }, callback)
+                                    }
+                                },
+                                trigger: 'blur'
+                            }
+                        ]
+                    }
+                }
+            },
+            methods: {
+                regist:function(){
+                    this.$refs.form.validate(function(valid){
+                        if(valid){//全部通过验证后才可提交数据
+                             regform.submit()
+                        }
+                    })                
+                }
+            }
+        })
+
+    </script>
+</body>
+
+</html>

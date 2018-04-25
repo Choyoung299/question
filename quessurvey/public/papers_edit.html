@@ -1,0 +1,123 @@
+<div id="paperAdd">
+    <h2>编辑</h2>
+    <div class="pacon">
+        <div class="pcl">
+            <el-tree node-key="id" ref="tree" show-checkbox default-expand-all :data="outline" :props="defaultProps" @check-change="selectNode"></el-tree>
+        </div>
+        <div class="pcr">
+            <el-card style="margin:5px" v-for="(item,index) in page.content" :key="'page_'+index" :header="item.text">
+                <el-radio-group v-model="radio2">
+                    <el-radio v-for="(i,index) in page.item" :key="'item_'+index" :label="i.id">{{i.text}}</el-radio>
+                </el-radio-group>
+
+            </el-card>
+        </div>
+    </div>
+
+    <div slot="footer">
+        <el-button @click="quick">取 消</el-button>
+        <el-button type="primary" @click="saveQues">确 定</el-button>
+    </div>
+    </el-dialog>
+
+</div>
+
+<script>
+    new Vue({
+        el: '#paperAdd',
+        created: function () {
+            var _this = this
+            $.get('/outline', function (result) {
+                if (result.error == 0) {
+                    _this.outline = result.data
+                }
+            })
+            $.get('/papers/find', { id: Cookies.get('paper_id') }, function (result) {
+                if (result.error != 0) { return };
+                _this.$refs.tree.setCheckedNodes(JSON.parse(result.data.content))
+                console.log(JSON.parse(result.data.content))
+            })
+        },
+        methods: {
+
+            saveQues: function () {
+                var _this = this
+                this.$prompt('请输入问卷标题', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    inputPattren: /^.+$/,
+                    inputErrorMessage: '标题不能为空',
+                    callback: function (action, obj) {
+                        if (action == 'confirm') {
+                            _this.page.title = obj.inputValue
+                            $.post('/papers/edit',
+                                {
+                                    title: _this.page.title,
+                                    content: JSON.stringify(_this.page.content),
+                                    item: JSON.stringify(_this.page.item)
+                                }, function (result) {
+                                    indexVm.loadPage('/nav/papers.html')
+                                })
+                        }
+                    }
+                })
+            },
+            selectNode: function (data, isSelect) {
+                if (data.children.length == 0) {
+                    if (isSelect) {
+                        this.page.content.push(data)
+                    } else {
+                        var index = this.page.content.indexOf(data)
+                        this.page.content.splice(index, 1)
+                    }
+
+                }
+            },
+            quick:function(){
+                indexVm.loadPage('/nav/papers.html')
+            }
+        },
+        data: function () {
+            return {
+                paperData: [],
+                page: {
+                    title: '',
+                    content: [],
+                    item: [
+                        { id: 1, text: '优秀', val: 5 },
+                        { id: 2, text: '良好', val: 4 },
+                        { id: 3, text: '中等', val: 3 },
+                        { id: 4, text: '很差', val: 2 }
+                    ]
+                },
+                outline: [],
+                defaultProps: {
+                    children: 'children',
+                    label: 'text'
+                }
+            }
+        }
+    })
+</script>
+
+<style>
+    .paper-conntainer {
+        padding: 10px;
+    }
+
+    .pacon {
+        background: white;
+        overflow: hidden;
+    }
+
+    .pacon>div {
+        float: left;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+    }
+
+    .pcr {
+        width: 60%;
+        float: right;
+        min-height: 500px;
+    }
+</style>

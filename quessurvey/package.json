@@ -1,0 +1,28 @@
+{
+  "name": "0308",
+  "version": "1.0.0",
+  "description": "cho",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cyy",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cookie-parser": "^1.4.3",
+    "cuid": "^2.1.1",
+    "echarts": "^4.0.4",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "jquery": "^3.3.1",
+    "js-cookie": "^2.2.0",
+    "md5": "^2.2.1",
+    "mockjs": "^1.0.1-beta3",
+    "multer": "^1.3.0",
+    "mysql": "^2.15.0",
+    "store": "^2.0.12",
+    "uuid": "^3.2.1",
+    "v-charts": "^1.16.9"
+  }
+}
